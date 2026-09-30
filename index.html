@@ -56,7 +56,7 @@
       -webkit-text-fill-color: transparent;
     }
     .frosted-glass {
-      background: rgba(255, 255, 255, 0.92);
+      background: rgba(255, 255, 255, 0.94);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
     }
@@ -72,6 +72,13 @@
     .btn-press:active {
       transform: scale(0.97);
     }
+    .fade-in {
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 
@@ -81,8 +88,8 @@
   <div class="absolute -top-16 -left-16 w-64 h-64 bg-gradient-to-tr from-blue-500/20 to-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
   <div class="absolute -bottom-16 -right-16 w-64 h-64 bg-gradient-to-tr from-fuchsia-500/20 to-pink-500/20 rounded-full blur-3xl pointer-events-none"></div>
 
-  <!-- Header -->
-  <header class="w-full max-w-md pt-2 pb-4 flex items-center justify-between z-10">
+  <!-- Header (Cleaned: Official badge and pulse indicator removed) -->
+  <header class="w-full max-w-md pt-2 pb-4 flex items-center justify-start z-10">
     <div class="flex items-center gap-3">
       <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-fuchsia-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 font-display font-extrabold text-lg tracking-wider">
         <i>i</i>C
@@ -95,13 +102,8 @@
         <p class="text-[11px] text-slate-500 font-medium">Team Campaign Launch</p>
       </div>
     </div>
-    <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold">
-      <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-      <span>Official</span>
-    </div>
   </header>
 
-  <!-- Main Card -->
   <main class="w-full max-w-md my-auto z-10">
     <div id="rsvpCard" class="frosted-glass border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-xl shadow-indigo-500/5 text-center relative overflow-hidden">
 
@@ -123,7 +125,7 @@
         Join us as we unveil our 6 election pledges, open accounts, and community plans built for every staff member.
       </p>
 
-      <!-- Selection Buttons -->
+      <!-- Selection Buttons (Hidden if user already registered) -->
       <div id="actionArea" class="mt-8 space-y-3.5">
         <button 
           id="btnYes" 
@@ -144,8 +146,7 @@
         </button>
       </div>
 
-      <!-- Post-Click Confirmation State -->
-      <div id="submittedState" class="hidden mt-6 pt-2">
+      <div id="submittedState" class="hidden mt-6 pt-2 fade-in">
         <div id="statusIconWrap" class="w-16 h-16 mx-auto rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl mb-3 border border-emerald-100">
           🎉
         </div>
@@ -168,11 +169,8 @@
   </footer>
 
   <script>
-    // ========================================================
-    // ⚙️ CONFIGURATION: Paste your Google Script Relay URL below
-    // (Your BOT_TOKEN remains completely hidden and secure!)
-    // ========================================================
-    const RELAY_URL = "https://script.google.com/macros/s/AKfycbza5ExcQjpzFkNarj9U74mSQEvcpdkM8T5kCeoBSPRMHAmVx41ldycyjj9CgpS49vuA/exec";
+    // Google Script Relay Web App URL
+    const RELAY_URL = "https://script.google.com/macros/s/AKfycbx9nFh7S1lg85fwfRKa3Ovt-Zpn4UiKWtrVDOk1P2jnbBYlPwDxFDXw0ESOAEC4I7fu/exec";
 
     // Initialize Telegram WebApp SDK
     const tg = window.Telegram?.WebApp;
@@ -182,7 +180,52 @@
       if (tg.setHeaderColor) tg.setHeaderColor('#f8fafc');
     }
 
+    // Extract user profile from Telegram context
+    const user = tg?.initDataUnsafe?.user;
+    const userId = user?.id ? String(user.id) : null;
+    const userName = user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : 'Guest';
+    const userHandle = user?.username ? `@${user.username}` : 'No username';
+
     let isSubmitting = false;
+
+    // Check on startup if this user has already scanned / RSVP'd
+    window.addEventListener('DOMContentLoaded', () => {
+      if (!userId || !RELAY_URL) return;
+
+      fetch(`${RELAY_URL}?userId=${encodeURIComponent(userId)}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data && data.alreadyScanned) {
+            // Disable actions and display previous RSVP status
+            isSubmitting = true;
+            const actions = document.getElementById('actionArea');
+            const submittedState = document.getElementById('submittedState');
+            const statusIconWrap = document.getElementById('statusIconWrap');
+            const statusTitle = document.getElementById('statusTitle');
+            const statusSubtitle = document.getElementById('statusSubtitle');
+
+            actions.classList.add('hidden');
+            submittedState.classList.remove('hidden');
+
+            const isYes = (data.previousChoice || '').toLowerCase().includes('joining') || data.previousChoice === 'yes';
+
+            if (isYes) {
+              statusIconWrap.className = 'w-16 h-16 mx-auto rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl mb-3 border border-emerald-200 shadow-inner';
+              statusIconWrap.textContent = '✅';
+              statusTitle.textContent = "You're Already Registered!";
+              statusSubtitle.textContent = `You previously confirmed: "${data.previousChoice || 'Joining ✅'}". We look forward to seeing you at the launch!`;
+            } else {
+              statusIconWrap.className = 'w-16 h-16 mx-auto rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center text-3xl mb-3 border border-slate-200 shadow-inner';
+              statusIconWrap.textContent = '🙌';
+              statusTitle.textContent = "Response Already Recorded";
+              statusSubtitle.textContent = `Your previous response (${data.previousChoice || 'Not joining ❌'}) is already logged. Remember to always be with #EnmengeiClub!`;
+            }
+          }
+        })
+        .catch(err => {
+          console.warn("Duplicate check query bypassed:", err);
+        });
+    });
 
     function handleRSVP(choice) {
       if (isSubmitting) return;
@@ -217,26 +260,26 @@
         statusSubtitle.textContent = "Remember to always be with #EnmengeiClub!";
       }
 
-      // Extract user info provided by Telegram WebApp
-      const user = tg?.initDataUnsafe?.user;
-      const userName = user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : 'Guest';
-      const userHandle = user?.username ? `@${user.username}` : 'No username';
-      const userId = user?.id || 'Unknown';
-
       const decisionText = choice === 'yes' ? "Joining ✅" : "Not joining ❌";
-      const message = `📢 *Campaign Launch RSVP*\n\n• *Decision:* ${decisionText}\n• *Name:* ${userName}\n• *Username:* ${userHandle}\n• *User ID:* \`${userId}\``;
+      const message = `📢 *Campaign Launch RSVP*\n\n• *Decision:* ${decisionText}\n• *Name:* ${userName}\n• *Username:* ${userHandle}\n• *User ID:* \`${userId || 'Unknown'}\``;
 
-      // Send to the private relay
-      if (RELAY_URL && RELAY_URL !== "PASTE_YOUR_GOOGLE_SCRIPT_WEB_APP_URL_HERE") {
+      // Send payload with userId to enforce Google Sheet deduplication
+      if (RELAY_URL) {
         fetch(RELAY_URL, {
           method: "POST",
           mode: "no-cors",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: message })
+          body: JSON.stringify({
+            userId: userId || "",
+            name: userName,
+            username: userHandle,
+            choice: choice,
+            message: message
+          })
         }).catch(err => console.error("Relay error:", err));
       }
 
-      // Close the Mini App window after visual feedback
+      // Automatically close the Mini App window after visual feedback
       setTimeout(() => {
         if (tg && typeof tg.close === 'function') {
           tg.close();
