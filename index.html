@@ -44,27 +44,27 @@
       -webkit-text-fill-color: transparent;
     }
     .frosted-glass {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
     }
     .radial-bg {
       background: 
-        radial-gradient(circle at top right, rgba(59, 130, 246, 0.16), transparent 45%),
-        radial-gradient(circle at bottom left, rgba(217, 70, 239, 0.16), transparent 50%),
+        radial-gradient(circle at top right, rgba(59, 130, 246, 0.14), transparent 45%),
+        radial-gradient(circle at bottom left, rgba(217, 70, 239, 0.14), transparent 50%),
         #f8fafc;
     }
     .btn-press {
-      transition: transform 0.12s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+      transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease, opacity 0.15s ease;
     }
     .btn-press:active {
       transform: scale(0.97);
     }
-    .fade-in {
-      animation: fadeIn 0.25s ease-out forwards;
+    .fade-enter {
+      animation: enterCard 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
+    @keyframes enterCard {
+      from { opacity: 0; transform: translateY(8px); }
       to { opacity: 1; transform: translateY(0); }
     }
   </style>
@@ -76,7 +76,7 @@
   <div class="absolute -top-16 -left-16 w-64 h-64 bg-gradient-to-tr from-blue-500/20 to-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
   <div class="absolute -bottom-16 -right-16 w-64 h-64 bg-gradient-to-tr from-fuchsia-500/20 to-pink-500/20 rounded-full blur-3xl pointer-events-none"></div>
 
-  <!-- Header -->
+  <!-- Header without pulse dot or official tag -->
   <header class="w-full max-w-md pt-2 pb-4 flex items-center justify-start z-10">
     <div class="flex items-center gap-3">
       <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-fuchsia-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 font-display font-extrabold text-lg tracking-wider">
@@ -92,27 +92,30 @@
     </div>
   </header>
 
-  <!-- Main Card Container -->
+  <!-- Main Container -->
   <main class="w-full max-w-md my-auto z-10">
     <div class="frosted-glass border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-xl shadow-indigo-500/5 text-center relative overflow-hidden">
 
       <!-- ============================================== -->
-      <!-- 1. LOADING SCREEN (Checks status first)       -->
+      <!-- 1. LOADING SCREEN (MANDATORY FIRST STATE)     -->
       <!-- ============================================== -->
-      <div id="stateLoading" class="py-10 fade-in">
-        <div class="w-12 h-12 mx-auto border-3 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-        <p class="mt-4 text-xs font-semibold text-slate-500">Checking your RSVP status...</p>
+      <div id="stateLoading" class="py-12 fade-enter">
+        <div class="relative w-12 h-12 mx-auto">
+          <div class="w-12 h-12 rounded-full border-3 border-indigo-100 border-t-indigo-600 animate-spin"></div>
+        </div>
+        <p class="mt-4 text-xs font-bold text-slate-600 tracking-wide">Checking RSVP status...</p>
+        <p class="text-[11px] text-slate-400 mt-1">Connecting to live register</p>
       </div>
 
       <!-- ============================================== -->
-      <!-- 2. ALREADY REGISTERED SCREEN (Shows if logged) -->
+      <!-- 2. ALREADY REGISTERED SCREEN                   -->
       <!-- ============================================== -->
-      <div id="stateAlreadyRegistered" class="hidden fade-in">
+      <div id="stateAlreadyRegistered" class="hidden fade-enter">
         <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl mb-4 border border-emerald-200 shadow-inner">
           ✅
         </div>
 
-        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100/70 border border-emerald-200 text-xs font-bold text-emerald-800 mb-3">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100/80 border border-emerald-200 text-xs font-bold text-emerald-900 mb-3">
           <span>Already Recorded</span>
         </div>
 
@@ -120,31 +123,31 @@
           We have your RSVP!
         </h2>
 
-        <div class="my-4 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl">
-          <p class="text-[11px] text-slate-500 font-medium uppercase tracking-wider">Your Current Decision</p>
-          <p id="recordedDecisionText" class="text-base font-extrabold text-slate-900 mt-0.5">
+        <div class="my-4 p-4 bg-slate-50 border border-slate-200/80 rounded-2xl">
+          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Your Current Decision</p>
+          <p id="recordedDecisionText" class="text-lg font-black text-slate-900 mt-0.5">
             Joining ✅
           </p>
         </div>
 
         <p class="text-xs text-slate-500 leading-relaxed max-w-xs mx-auto mb-6">
-          Thank you for supporting #EnmengeiClub. If your plans have changed, you can update your response below.
+          Thank you for supporting #EnmengeiClub. If your schedule has changed, you can update your response below.
         </p>
 
         <button 
           type="button" 
-          onclick="showPromptForUpdate()"
-          class="btn-press w-full py-3.5 px-6 rounded-2xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-extrabold text-sm shadow-sm flex items-center justify-center gap-2"
+          onclick="unlockButtonsForUpdate()"
+          class="btn-press w-full py-3.5 px-6 rounded-2xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 font-extrabold text-sm shadow-xs flex items-center justify-center gap-2"
         >
           ✏️ Change my decision
         </button>
       </div>
 
       <!-- ============================================== -->
-      <!-- 3. RSVP PROMPT SCREEN (Yes / No Actions)      -->
+      <!-- 3. RSVP PROMPT SCREEN (Yes/No Buttons)        -->
       <!-- ============================================== -->
-      <div id="statePrompt" class="hidden fade-in">
-        <!-- Badge Strip -->
+      <div id="statePrompt" class="hidden fade-enter">
+        <!-- Badges -->
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50/90 border border-indigo-200/80 text-xs font-bold text-indigo-700 mb-5">
           <span class="text-fuchsia-600 font-extrabold">🚀</span>
           <span>All Staff Invited</span>
@@ -157,21 +160,21 @@
           <span class="gradient-text">Team Campaign Launch?</span>
         </h1>
 
-        <p class="mt-3 text-sm text-slate-600 leading-relaxed max-w-xs mx-auto">
+        <p class="mt-3 text-xs sm:text-sm text-slate-600 leading-relaxed max-w-xs mx-auto">
           Join us as we unveil our 6 election pledges, open accounts, and community plans built for every staff member.
         </p>
 
-        <!-- Notice shown ONLY if user chose to update their previous response -->
-        <div id="updateBanner" class="hidden mt-4 p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 font-semibold">
-          🔄 Select an option below to update your RSVP
+        <!-- Dynamic Update Banner (Shown only when modifying previous response) -->
+        <div id="updateBanner" class="hidden mt-4 p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 font-semibold">
+          🔄 Select an option below to update your row
         </div>
 
-        <!-- Action Buttons -->
+        <!-- Buttons -->
         <div class="mt-6 space-y-3">
           <button 
             id="btnYes" 
             type="button" 
-            onclick="handleRSVP('yes')"
+            onclick="submitRSVP('yes')"
             class="btn-press w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-fuchsia-600 text-white font-extrabold text-base shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 hover:opacity-95"
           >
             <span id="btnYesText">✅ Yes, I'm joining!</span>
@@ -180,8 +183,8 @@
           <button 
             id="btnNo" 
             type="button" 
-            onclick="handleRSVP('no')"
-            class="btn-press w-full py-3.5 px-6 rounded-2xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold text-sm shadow-xs flex items-center justify-center gap-2"
+            onclick="submitRSVP('no')"
+            class="btn-press w-full py-3 px-6 rounded-2xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold text-sm shadow-xs flex items-center justify-center gap-2"
           >
             <span id="btnNoText">❌ No, can't make it</span>
           </button>
@@ -191,13 +194,13 @@
       <!-- ============================================== -->
       <!-- 4. SUBMITTED CONFIRMATION STATE                -->
       <!-- ============================================== -->
-      <div id="stateSubmitted" class="hidden py-6 fade-in">
+      <div id="stateSubmitted" class="hidden py-8 fade-enter">
         <div id="statusIconWrap" class="w-16 h-16 mx-auto rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl mb-3 border border-emerald-200 shadow-inner">
           🎉
         </div>
-        <h3 id="statusTitle" class="text-lg font-extrabold text-slate-900 font-display">Response Recorded!</h3>
+        <h3 id="statusTitle" class="text-xl font-extrabold text-slate-900 font-display">Response Recorded!</h3>
         <p id="statusSubtitle" class="text-xs text-slate-500 mt-1 leading-relaxed">
-          Updating your RSVP and closing window...
+          Updating your RSVP in the spreadsheet...
         </p>
       </div>
 
@@ -206,7 +209,7 @@
 
   <!-- Footer -->
   <footer class="w-full max-w-md py-4 text-center z-10">
-    <div class="p-3.5 rounded-2xl bg-white/70 border border-slate-200/70 text-slate-500 text-xs">
+    <div class="p-3 rounded-2xl bg-white/70 border border-slate-200/70 text-slate-500 text-xs">
       <span class="font-extrabold text-indigo-700">#EnmengeiClub</span>
       <span class="mx-1">•</span>
       <span>A Club Built For All Of Us</span>
@@ -214,7 +217,7 @@
   </footer>
 
   <script>
-    // Google Apps Script Relay Web App URL
+    // Google Apps Script Relay URL
     const RELAY_URL = "https://script.google.com/macros/s/AKfycbx9nFh7S1lg85fwfRKa3Ovt-Zpn4UiKWtrVDOk1P2jnbBYlPwDxFDXw0ESOAEC4I7fu/exec";
 
     // Initialize Telegram WebApp SDK
@@ -225,7 +228,7 @@
       if (tg.setHeaderColor) tg.setHeaderColor('#f8fafc');
     }
 
-    // Extract user context from Telegram
+    // Extract Telegram User info
     const user = tg?.initDataUnsafe?.user;
     const userId = user?.id ? String(user.id) : null;
     const userName = user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : 'Guest';
@@ -233,58 +236,62 @@
 
     let isSubmitting = false;
 
-    // Elements
+    // View States
     const stateLoading = document.getElementById('stateLoading');
     const stateAlreadyRegistered = document.getElementById('stateAlreadyRegistered');
     const statePrompt = document.getElementById('statePrompt');
     const stateSubmitted = document.getElementById('stateSubmitted');
     const recordedDecisionText = document.getElementById('recordedDecisionText');
 
+    // Startup check: Strictly verifies before revealing any buttons
     window.addEventListener('DOMContentLoaded', () => {
-      // If outside Telegram or no user id (e.g. browser preview), show prompt directly
+      // If outside Telegram without an ID (e.g., standard PC browser preview), reveal prompt after short delay
       if (!userId || !RELAY_URL) {
-        showPrompt();
+        setTimeout(revealPromptScreen, 400);
         return;
       }
 
-      // Check if user has already RSVP'd BEFORE revealing the prompt
+      // Query Google Apps Script to check if this user ID already exists in the sheet
       fetch(`${RELAY_URL}?userId=${encodeURIComponent(userId)}`)
         .then(res => res.json())
         .then(data => {
           if (data && data.alreadyScanned) {
-            // User already RSVP'd -> show Already Registered screen directly
+            // Already RSVP'd -> Hide loading, show current status screen ONLY
             stateLoading.classList.add('hidden');
             recordedDecisionText.textContent = data.previousChoice || 'Joining ✅';
             stateAlreadyRegistered.classList.remove('hidden');
           } else {
-            // First time user -> show prompt
-            showPrompt();
+            // First-time respondent -> Show prompt with buttons
+            revealPromptScreen();
           }
         })
         .catch(err => {
-          console.warn("Pre-check failed, fallback to prompt:", err);
-          showPrompt();
+          console.warn("Status check failed or offline:", err);
+          // Fallback to prompt only if request fails
+          revealPromptScreen();
         });
     });
 
-    function showPrompt() {
+    // Helper to transition smoothly from loader to prompt
+    function revealPromptScreen() {
       stateLoading.classList.add('hidden');
       stateAlreadyRegistered.classList.add('hidden');
       statePrompt.classList.remove('hidden');
     }
 
     // Called when the user clicks "Change my decision"
-    function showPromptForUpdate() {
+    function unlockButtonsForUpdate() {
       document.getElementById('updateBanner').classList.remove('hidden');
       document.getElementById('btnYesText').textContent = "Update: Yes, I'm joining! ✅";
       document.getElementById('btnNoText').textContent = "Update: No, can't make it ❌";
-      showPrompt();
+      revealPromptScreen();
     }
 
-    function handleRSVP(choice) {
+    function submitRSVP(choice) {
       if (isSubmitting) return;
       isSubmitting = true;
 
+      // Immediately switch to submitted feedback screen
       statePrompt.classList.add('hidden');
       stateSubmitted.classList.remove('hidden');
 
@@ -295,8 +302,8 @@
       if (choice === 'yes') {
         if (typeof confetti === 'function') {
           confetti({
-            particleCount: 80,
-            spread: 70,
+            particleCount: 85,
+            spread: 75,
             origin: { y: 0.6 },
             colors: ['#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b']
           });
@@ -307,7 +314,7 @@
         statusSubtitle.textContent = "Your RSVP has been synchronized in the spreadsheet.";
       } else {
         statusIconWrap.className = 'w-16 h-16 mx-auto rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center text-3xl mb-3 border border-slate-200 shadow-inner';
-        statusIconWrap.textContent = '🙌';
+        statusIconWrap.textContent = '🤝';
         statusTitle.textContent = "Response Updated";
         statusSubtitle.textContent = "Thank you for letting us know! Always with #EnmengeiClub.";
       }
@@ -315,7 +322,7 @@
       const decisionText = choice === 'yes' ? "Joining ✅" : "Not joining ❌";
       const message = `📢 *Campaign Launch RSVP*\n\n• *Decision:* ${decisionText}\n• *Name:* ${userName}\n• *Username:* ${userHandle}\n• *User ID:* \`${userId || 'Unknown'}\``;
 
-      // Submit data to update or append row in Apps Script
+      // POST to Google Apps Script (handles new rows and updates existing rows)
       if (RELAY_URL) {
         fetch(RELAY_URL, {
           method: "POST",
@@ -328,15 +335,15 @@
             choice: choice,
             message: message
           })
-        }).catch(err => console.error("Submission relay error:", err));
+        }).catch(err => console.error("Relay error:", err));
       }
 
-      // Close Mini App automatically after confirmation
+      // Automatically close window after confirmation
       setTimeout(() => {
         if (tg && typeof tg.close === 'function') {
           tg.close();
         }
-      }, 1600);
+      }, 1700);
     }
   </script>
 </body>
