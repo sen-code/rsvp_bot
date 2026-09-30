@@ -169,10 +169,10 @@
 
   <script>
     // ========================================================
-    // ⚙️ CONFIGURATION: Fill in your Bot details below
+    // ⚙️ CONFIGURATION: Paste your Google Script Relay URL below
+    // (Your BOT_TOKEN remains completely hidden and secure!)
     // ========================================================
-    const BOT_TOKEN = "8878857485:AAGZ9JMb2AiU9i6UuC5oca8ca03vgQbyP7s";       // Put your Telegram Bot Token
-    const ADMIN_CHAT_ID = "78284517";     // Put your numeric Chat ID
+    const RELAY_URL = "PASTE_YOUR_GOOGLE_SCRIPT_WEB_APP_URL_HERE";
 
     // Initialize Telegram WebApp SDK
     const tg = window.Telegram?.WebApp;
@@ -226,26 +226,14 @@
       const decisionText = choice === 'yes' ? "Joining ✅" : "Not joining ❌";
       const message = `📢 *Campaign Launch RSVP*\n\n• *Decision:* ${decisionText}\n• *Name:* ${userName}\n• *Username:* ${userHandle}\n• *User ID:* \`${userId}\``;
 
-      // 1. Primary: Direct Bot API notification (Works flawlessly with Direct Links)
-      if (BOT_TOKEN && BOT_TOKEN !== "YOUR_BOT_TOKEN_HERE" && ADMIN_CHAT_ID) {
-        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      // Send to the private relay
+      if (RELAY_URL && RELAY_URL !== "PASTE_YOUR_GOOGLE_SCRIPT_WEB_APP_URL_HERE") {
+        fetch(RELAY_URL, {
           method: "POST",
+          mode: "no-cors",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: ADMIN_CHAT_ID,
-            text: message,
-            parse_mode: "Markdown"
-          })
-        }).catch(err => console.error("Error sending notification:", err));
-      }
-
-      // 2. Fallback: Telegram sendData (if opened from bot keyboard)
-      try {
-        if (tg && typeof tg.sendData === 'function') {
-          tg.sendData(choice);
-        }
-      } catch (e) {
-        // Ignored if direct link environment restrictions apply
+          body: JSON.stringify({ message: message })
+        }).catch(err => console.error("Relay error:", err));
       }
 
       // Close the Mini App window after visual feedback
@@ -253,7 +241,7 @@
         if (tg && typeof tg.close === 'function') {
           tg.close();
         }
-      }, 1400);
+      }, 1500);
     }
   </script>
 </body>
