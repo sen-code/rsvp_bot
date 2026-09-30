@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>iClub 2026 | Campaign Launch RSVP</title>
 
   <!-- Telegram WebApp SDK -->
@@ -88,7 +88,7 @@
   <div class="absolute -top-16 -left-16 w-64 h-64 bg-gradient-to-tr from-blue-500/20 to-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
   <div class="absolute -bottom-16 -right-16 w-64 h-64 bg-gradient-to-tr from-fuchsia-500/20 to-pink-500/20 rounded-full blur-3xl pointer-events-none"></div>
 
-  <!-- Header (Cleaned: Official badge and pulse indicator removed) -->
+  <!-- Header (Clean: official badge and pulsing indicator removed) -->
   <header class="w-full max-w-md pt-2 pb-4 flex items-center justify-start z-10">
     <div class="flex items-center gap-3">
       <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-fuchsia-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 font-display font-extrabold text-lg tracking-wider">
@@ -115,25 +115,45 @@
         <span class="text-indigo-900 font-extrabold">8 Leaders</span>
       </div>
 
-      <!-- Main Headline -->
-      <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 font-display tracking-tight leading-tight">
-        Are you joining our <br />
-        <span class="gradient-text">Team Campaign Launch?</span>
-      </h1>
+      <!-- Main Headline Prompt -->
+      <div id="promptSection">
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 font-display tracking-tight leading-tight">
+          Are you joining our <br />
+          <span class="gradient-text">Team Campaign Launch?</span>
+        </h1>
 
-      <p class="mt-3 text-sm text-slate-600 leading-relaxed max-w-xs mx-auto">
-        Join us as we unveil our 6 election pledges, open accounts, and community plans built for every staff member.
-      </p>
+        <p class="mt-3 text-sm text-slate-600 leading-relaxed max-w-xs mx-auto">
+          Join us as we unveil our 6 election pledges, open accounts, and community plans built for every staff member.
+        </p>
+      </div>
 
-      <!-- Selection Buttons (Hidden if user already registered) -->
-      <div id="actionArea" class="mt-8 space-y-3.5">
+      <!-- Already Submitted Notice (Appears if user previously scanned) -->
+      <div id="alreadyRegisteredNotice" class="hidden my-4 p-3.5 bg-amber-50/90 border border-amber-200 rounded-2xl text-left fade-in">
+        <div class="flex items-start gap-2.5">
+          <span class="text-base leading-none">ℹ️</span>
+          <div>
+            <p class="text-xs font-bold text-amber-900">
+              We already received your RSVP:
+            </p>
+            <p id="currentChoiceDisplay" class="text-xs text-amber-800 font-semibold mt-0.5">
+              Current status: Joining ✅
+            </p>
+            <p class="text-[11px] text-amber-700 mt-1 leading-snug">
+              Want to change your mind? Tap an option below to update your decision.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selection Buttons -->
+      <div id="actionArea" class="mt-6 space-y-3.5">
         <button 
           id="btnYes" 
           type="button" 
           onclick="handleRSVP('yes')"
           class="btn-press w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-fuchsia-600 text-white font-extrabold text-base shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 hover:opacity-95"
         >
-          <span>✅ Yes, I'm joining!</span>
+          <span id="btnYesText">✅ Yes, I'm joining!</span>
         </button>
 
         <button 
@@ -142,17 +162,18 @@
           onclick="handleRSVP('no')"
           class="btn-press w-full py-3.5 px-6 rounded-2xl bg-white border border-slate-200/90 hover:bg-slate-100 text-slate-600 font-bold text-sm shadow-xs transition-colors flex items-center justify-center gap-2"
         >
-          <span>❌ No, can't make it</span>
+          <span id="btnNoText">❌ No, can't make it</span>
         </button>
       </div>
 
+      <!-- Post-Submission Feedback State -->
       <div id="submittedState" class="hidden mt-6 pt-2 fade-in">
         <div id="statusIconWrap" class="w-16 h-16 mx-auto rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl mb-3 border border-emerald-100">
           🎉
         </div>
         <h3 id="statusTitle" class="text-lg font-extrabold text-slate-900 font-display">Response Recorded</h3>
         <p id="statusSubtitle" class="text-xs text-slate-500 mt-1 leading-relaxed">
-          Closing window and sending details to Telegram...
+          Updating your RSVP and closing window...
         </p>
       </div>
 
@@ -169,7 +190,7 @@
   </footer>
 
   <script>
-    // Google Script Relay Web App URL
+    // Google Apps Script Relay Web App URL
     const RELAY_URL = "https://script.google.com/macros/s/AKfycbx9nFh7S1lg85fwfRKa3Ovt-Zpn4UiKWtrVDOk1P2jnbBYlPwDxFDXw0ESOAEC4I7fu/exec";
 
     // Initialize Telegram WebApp SDK
@@ -188,7 +209,7 @@
 
     let isSubmitting = false;
 
-    // Check on startup if this user has already scanned / RSVP'd
+    // Check on startup if this user has already registered
     window.addEventListener('DOMContentLoaded', () => {
       if (!userId || !RELAY_URL) return;
 
@@ -196,34 +217,22 @@
         .then(response => response.json())
         .then(data => {
           if (data && data.alreadyScanned) {
-            // Disable actions and display previous RSVP status
-            isSubmitting = true;
-            const actions = document.getElementById('actionArea');
-            const submittedState = document.getElementById('submittedState');
-            const statusIconWrap = document.getElementById('statusIconWrap');
-            const statusTitle = document.getElementById('statusTitle');
-            const statusSubtitle = document.getElementById('statusSubtitle');
+            // Display already registered banner
+            const notice = document.getElementById('alreadyRegisteredNotice');
+            const statusDisplay = document.getElementById('currentChoiceDisplay');
+            const btnYesText = document.getElementById('btnYesText');
+            const btnNoText = document.getElementById('btnNoText');
 
-            actions.classList.add('hidden');
-            submittedState.classList.remove('hidden');
+            notice.classList.remove('hidden');
+            statusDisplay.textContent = `Current status: ${data.previousChoice || 'Logged in Sheet'}`;
 
-            const isYes = (data.previousChoice || '').toLowerCase().includes('joining') || data.previousChoice === 'yes';
-
-            if (isYes) {
-              statusIconWrap.className = 'w-16 h-16 mx-auto rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl mb-3 border border-emerald-200 shadow-inner';
-              statusIconWrap.textContent = '✅';
-              statusTitle.textContent = "You're Already Registered!";
-              statusSubtitle.textContent = `You previously confirmed: "${data.previousChoice || 'Joining ✅'}". We look forward to seeing you at the launch!`;
-            } else {
-              statusIconWrap.className = 'w-16 h-16 mx-auto rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center text-3xl mb-3 border border-slate-200 shadow-inner';
-              statusIconWrap.textContent = '🙌';
-              statusTitle.textContent = "Response Already Recorded";
-              statusSubtitle.textContent = `Your previous response (${data.previousChoice || 'Not joining ❌'}) is already logged. Remember to always be with #EnmengeiClub!`;
-            }
+            // Adjust button labels to indicate an update action
+            btnYesText.textContent = "Update: Yes, I'm joining! ✅";
+            btnNoText.textContent = "Update: No, can't make it ❌";
           }
         })
         .catch(err => {
-          console.warn("Duplicate check query bypassed:", err);
+          console.warn("Status check query skipped:", err);
         });
     });
 
@@ -232,11 +241,13 @@
       isSubmitting = true;
 
       const actions = document.getElementById('actionArea');
+      const notice = document.getElementById('alreadyRegisteredNotice');
       const submittedState = document.getElementById('submittedState');
       const statusIconWrap = document.getElementById('statusIconWrap');
       const statusTitle = document.getElementById('statusTitle');
       const statusSubtitle = document.getElementById('statusSubtitle');
 
+      notice.classList.add('hidden');
       actions.classList.add('hidden');
       submittedState.classList.remove('hidden');
 
@@ -251,19 +262,19 @@
         }
         statusIconWrap.className = 'w-16 h-16 mx-auto rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-3xl mb-3 border border-emerald-200 shadow-inner';
         statusIconWrap.textContent = '🎉';
-        statusTitle.textContent = "Thank you! You're in!";
-        statusSubtitle.textContent = "Welcome to the Team campaign launch! Recording your RSVP...";
+        statusTitle.textContent = "Response Saved!";
+        statusSubtitle.textContent = "Your RSVP has been recorded in the attendance sheet.";
       } else {
         statusIconWrap.className = 'w-16 h-16 mx-auto rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center text-3xl mb-3 border border-slate-200 shadow-inner';
         statusIconWrap.textContent = '🙌';
-        statusTitle.textContent = "No problem at all!";
-        statusSubtitle.textContent = "Remember to always be with #EnmengeiClub!";
+        statusTitle.textContent = "Response Updated";
+        statusSubtitle.textContent = "Thank you for letting us know! Remember to always be with #EnmengeiClub!";
       }
 
       const decisionText = choice === 'yes' ? "Joining ✅" : "Not joining ❌";
       const message = `📢 *Campaign Launch RSVP*\n\n• *Decision:* ${decisionText}\n• *Name:* ${userName}\n• *Username:* ${userHandle}\n• *User ID:* \`${userId || 'Unknown'}\``;
 
-      // Send payload with userId to enforce Google Sheet deduplication
+      // Submit data to Apps Script to update or append row
       if (RELAY_URL) {
         fetch(RELAY_URL, {
           method: "POST",
@@ -276,15 +287,15 @@
             choice: choice,
             message: message
           })
-        }).catch(err => console.error("Relay error:", err));
+        }).catch(err => console.error("Relay submission error:", err));
       }
 
-      // Automatically close the Mini App window after visual feedback
+      // Close the Mini App window after visual confirmation
       setTimeout(() => {
         if (tg && typeof tg.close === 'function') {
           tg.close();
         }
-      }, 1500);
+      }, 1600);
     }
   </script>
 </body>
